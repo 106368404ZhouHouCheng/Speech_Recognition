@@ -29,7 +29,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 
 path, _ = os.path.split(os.path.abspath(__file__))
-train_audio_path = path + '/train data/train/audio/'
+train_audio_path = path + '/train_data/train/audio/'
 filename = '/yes/0f7dc557_nohash_1.wav'
 sample_rate, samples = wavfile.read(str(train_audio_path) + filename)
 
@@ -40,7 +40,6 @@ def log_specgram(audio, sample_rate, window_size=20,
   noverlap = int(round(step_size * sample_rate / 1e3))
   freqs, times, spec = signal.spectrogram(audio,
                                           fs=sample_rate,
-                                          window='hann',
                                           nperseg=nperseg,
                                           noverlap=noverlap,
                                           detrend=False)
@@ -62,7 +61,7 @@ def log_specgram2(audio, sample_rate, window_size=20,
   return freqs, times, np.log(spec.astype(np.float32) + eps)
 
 
-freqs, times, spectrogram = log_specgram(samples, sample_rate)
+freqs, times, spectrogram = log_specgram2(samples, sample_rate)
 
 fig = plt.figure(figsize=(14, 8))
 ax1 = fig.add_subplot(211)

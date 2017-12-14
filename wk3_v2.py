@@ -9,7 +9,6 @@ from scipy import signal
 
 from sklearn.cross_validation import train_test_split
 
-
 from keras.models import Sequential, Model, load_model
 from keras.optimizers import Adam
 from keras.layers import *
@@ -114,33 +113,23 @@ x_test = [read_wav_file(x) for x in x_test]
 freqs, times, x_train = process_wav_file(x_train)
 freqs, times, x_test = process_wav_file(x_test)
 
-# CNN model
-model = Sequential()
-# CNN layer 1
-print(x_train.shape[1:])
-model.add(Conv2D(64, kernel_size=3, padding='same', activation='relu',
-                 data_format='channels_last', input_shape=(x_train.shape[1:])))
-model.add(MaxPool2D(pool_size=(2, 2)))
 
-# CNN layer 2
-model.add(Conv2D(128, kernel_size=3, padding='same', activation='relu'))
-model.add(Conv2D(128, kernel_size=3, padding='same', activation='relu'))
-model.add(MaxPool2D(pool_size=(2, 2)))
-
-# CNN layer 3
-model.add(Conv2D(256, kernel_size=3, padding='same', activation='relu'))
-model.add(Conv2D(256, kernel_size=3, padding='same', activation='relu'))
-model.add(Conv2D(256, kernel_size=3, padding='same', activation='relu'))
-model.add(MaxPool2D(pool_size=(2, 2)))
-
-model.add(Flatten())
-
-# layer 1
-model.add(Dense(512, activation='relu'))
-model.add(Dropout(0.5))
-
-# layer 2
-model.add(Dense(len(POSSIBLE_LABELS), activation='softmax'))
+x_in = Input(shape=(x_train.shape[1:]))
+x = BatchNormalization()(x_in)
+for i in range(4):
+    x = Conv2D(16*(2 ** i), (3,3))(x)
+    x = Activation('elu')(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D((2, 2))(x)
+x = Conv2D(128, (1, 1))(x)
+x_branch_1 = GlobalAveragePooling2D()(x)
+x_branch_2 = GlobalMaxPool2D()(x)
+x = concatenate([x_branch_1, x_branch_2])
+x = Dense(256, activation='relu')(x)
+x = Dropout(0.5)(x)
+x = Dense(len(POSSIBLE_LABELS), activation='soft')(x)
+model = Model(inputs=x_in, outputs=x)
+model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
 model.summary()
 
 model.compile(loss='categorical_crossentropy',
