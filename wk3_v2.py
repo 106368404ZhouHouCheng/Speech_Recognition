@@ -17,8 +17,8 @@ from keras.utils.np_utils import to_categorical
 
 
 path, _ = os.path.split(os.path.abspath(__file__))
-# DATA_DIR = path + '/train_data/train/audio/'
-DATA_DIR = path + '/train_data/train/small_audio/'    # small_audio, single_data
+DATA_DIR = path + '/train_data/train/audio/'
+# DATA_DIR = path + '/train_data/train/small_audio/'    # small_audio, single_data
 ALL_LABELS = 'yes bird happy five eight left house one four six two marvin nine dog seven stop no go ' \
              'right sheila zero cat on wow off down up _background_noise_ _silence_ three bed tree'.split()
 POSSIBLE_LABELS = 'yes no up down left right on off stop go silence unknown'.split()
@@ -113,8 +113,8 @@ x_test = [read_wav_file(x) for x in x_test]
 freqs, times, x_train = process_wav_file(x_train)
 freqs, times, x_test = process_wav_file(x_test)
 
-
-x_in = Input(shape=(x_train.shape[1:]))
+print(x_train.shape[1:])
+x_in = Input(shape=x_train.shape[1:])
 x = BatchNormalization()(x_in)
 for i in range(4):
     x = Conv2D(16*(2 ** i), (3,3))(x)
@@ -127,7 +127,7 @@ x_branch_2 = GlobalMaxPool2D()(x)
 x = concatenate([x_branch_1, x_branch_2])
 x = Dense(256, activation='relu')(x)
 x = Dropout(0.5)(x)
-x = Dense(len(POSSIBLE_LABELS), activation='soft')(x)
+x = Dense(len(POSSIBLE_LABELS), activation='softmax')(x)
 model = Model(inputs=x_in, outputs=x)
 model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
 model.summary()
