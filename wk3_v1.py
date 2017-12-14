@@ -11,14 +11,15 @@ from sklearn.cross_validation import train_test_split
 
 
 from keras.models import Sequential, Model, load_model
+from keras.optimizers import Adam
 from keras.layers import *
 from keras.callbacks import *
 from keras.utils.np_utils import to_categorical
 
 
 path, _ = os.path.split(os.path.abspath(__file__))
-DATA_DIR = path + '/train_data/train/audio/'
-# DATA_DIR = path + '/train_data/train/single_data/'
+# DATA_DIR = path + '/train_data/train/audio/'
+DATA_DIR = path + '/train_data/train/small_audio/'    # small_audio, single_data
 ALL_LABELS = 'yes bird happy five eight left house one four six two marvin nine dog seven stop no go ' \
              'right sheila zero cat on wow off down up _background_noise_ _silence_ three bed tree'.split()
 POSSIBLE_LABELS = 'yes no up down left right on off stop go silence unknown'.split()
@@ -66,8 +67,8 @@ def load_data(data_dir):
   rand_y_train = y_train[indices_train]
   rand_y_test = y_test[indices_test]
 
-  rand_y_train = to_categorical(rand_y_train, num_classes=12)
-  rand_y_test = to_categorical(rand_y_test, num_classes=12)
+  rand_y_train = to_categorical(rand_y_train, num_classes=len(POSSIBLE_LABELS))
+  rand_y_test = to_categorical(rand_y_test, num_classes=len(POSSIBLE_LABELS))
 
   print('There are {} train and {} val samples'.format(len(rand_x_train), len(rand_x_test)))
   return rand_x_train, rand_x_test, rand_y_train, rand_y_test
@@ -139,18 +140,18 @@ model.add(Dense(512, activation='relu'))
 model.add(Dropout(0.5))
 
 # layer 2
-model.add(Dense(12, activation='softmax'))
+model.add(Dense(len(POSSIBLE_LABELS), activation='softmax'))
 model.summary()
 
 model.compile(loss='categorical_crossentropy',
-              optimizer='adam',
+              optimizer=Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08),
               metrics=['accuracy'])
 
 epochs = 150
 batch_size = 64
 file_name = str(epochs) + '_' + str(batch_size)
 cbks = [
-    EarlyStopping(monitor='val_loss', patience=50),
+    # EarlyStopping(monitor='val_loss', patience=50),
     TensorBoard(log_dir='logs/' + file_name)
 ]
 print(x_train.shape)

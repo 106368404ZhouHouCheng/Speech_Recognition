@@ -1,7 +1,4 @@
 logs/
 h5/
-test_data/test/
-test_data/__MACOSX/
-train data/train/
-train data/__MACOSX/
-
+test_data/
+train_data/
