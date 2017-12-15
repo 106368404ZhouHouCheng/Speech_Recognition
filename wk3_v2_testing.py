@@ -18,8 +18,9 @@ len(id2name)
 def load_wav(data_dir):
   all_files = glob(os.path.join(data_dir, '*wav'))
   samples_list = []
-  for file_abs in all_files:
-    sample_rate, samples = wavfile.read(file_abs)
+  for i in range(1, len(all_files)+1):
+    print(data_dir + str(i) + '.wav')
+    sample_rate, samples = wavfile.read(data_dir + str(i) + '.wav')
     samples = samples.astype(np.float32) / np.iinfo(np.int16).max
     samples_list.append(samples)
   return samples_list
@@ -71,4 +72,4 @@ with open('price_pred.csv', 'w') as f:
     w = csv.writer(f)
     w.writerow(['fname', 'label'])
     for i, y in enumerate(label_str, 1):
-        w.writerow([str(i) + 'wav', y])
+        w.writerow([str(i) + '.wav', y])
