@@ -63,7 +63,7 @@ def transform(listdir, label, size):
 wav_data = load_wav(DATA_DIR)
 freqs, times, x_test = process_wav_file(wav_data)
 
-model = load_model('h5/150_64.h5')
+model = load_model('h5/150_120.h5')
 predict = model.predict(x_test, verbose=1)
 predict = np.argmax(predict, axis=1)
 label_str = transform(id2name, predict, len(wav_data))

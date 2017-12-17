@@ -137,7 +137,7 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 epochs = 150
-batch_size = 64
+batch_size = 120
 file_name = str(epochs) + '_' + str(batch_size)
 cbks = [
     EarlyStopping(monitor='val_loss',
@@ -151,11 +151,11 @@ cbks = [
                       verbose=1,
                       epsilon=0.01,
                       mode='min'),
-    # ModelCheckpoint(monitor='val_loss',
-    #                 filepath='weights/starter.hdf5',
-    #                 save_best_only=True,
-    #                 save_weights_only=True,
-    #                 mode='min'),
+     #ModelCheckpoint(monitor='val_loss',
+     #                filepath='weights/starter.hdf5',
+     #                save_best_only=True,
+     #                save_weights_only=True,
+     #                mode='min'),
     TensorBoard(log_dir='logs/' + file_name)
 ]
 print(x_train.shape)
