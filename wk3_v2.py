@@ -137,7 +137,7 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 epochs = 150
-batch_size = 120
+batch_size = 32
 file_name = str(epochs) + '_' + str(batch_size)
 cbks = [
     EarlyStopping(monitor='val_loss',
