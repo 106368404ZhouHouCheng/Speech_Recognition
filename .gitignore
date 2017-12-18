@@ -2,3 +2,6 @@ logs/
 h5/
 test_data/
 train_data/
+images/
+predict/
+
