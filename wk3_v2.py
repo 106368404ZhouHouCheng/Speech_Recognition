@@ -49,13 +49,12 @@ def load_data(data_dir):
 
   x_train, x_test, y_train, y_test = np.array([]), np.array([]), np.array([]), np.array([])
   for key in sample.keys():
-    if key != 'silence':
-      y = [name2id[key] for i in range(len(sample[key]))]
-      xtr, xtt, ytr, ytt = train_test_split(sample[key], y, test_size=0.1)
-      x_train = np.hstack((x_train, xtr))
-      x_test = np.hstack((x_test, xtt))
-      y_train = np.hstack((y_train, ytr))
-      y_test = np.hstack((y_test, ytt))
+    y = [name2id[key] for i in range(len(sample[key]))]
+    xtr, xtt, ytr, ytt = train_test_split(sample[key], y, test_size=0.1)
+    x_train = np.hstack((x_train, xtr))
+    x_test = np.hstack((x_test, xtt))
+    y_train = np.hstack((y_train, ytr))
+    y_test = np.hstack((y_test, ytt))
 
   # random data
   indices_train = np.random.permutation(len(x_train))
@@ -70,7 +69,11 @@ def load_data(data_dir):
   rand_y_test = to_categorical(rand_y_test, num_classes=len(POSSIBLE_LABELS))
 
   print('There are {} train and {} val samples'.format(len(rand_x_train), len(rand_x_test)))
-  return rand_x_train, rand_x_test, rand_y_train, rand_y_test
+  return rand_x_train, rand_x_test, rand_y_train, rand_y_test, sample['silence']
+
+
+# def load_silence():
+
 
 
 def read_wav_file(file_abs):
@@ -81,7 +84,7 @@ def read_wav_file(file_abs):
   return samples
 
 
-def process_wav_file(data, window_size=20, step_size=10, eps=1e-10):
+def process_wav_file(data, silence_data=np.array([]), window_size=20, step_size=10, eps=1e-10):
   # 1 sec
   L = 16000
   nperseg = int(round(window_size * L / 1e3))
@@ -92,7 +95,19 @@ def process_wav_file(data, window_size=20, step_size=10, eps=1e-10):
       i = np.random.randint(0, len(single_data) - L)
       single_data = single_data[i:(i+L)]
     elif len(single_data) < L:
-      single_data = np.concatenate([single_data, np.zeros(L - len(single_data))])
+      # no silence way
+      print(silence_data.any())
+      if silence_data.any():
+        rem_len = L - len(single_data)
+        print(len(silence_data) - rem_len)
+        i = np.random.randint(0, len(silence_data) - rem_len)
+        silence_part = silence_data[i:(i + L)]
+        j = np.random.randint(0, rem_len)
+        silence_part_left = silence_part[0:j]
+        silence_part_right = silence_part[j:rem_len]
+        single_data = np.concatenate([silence_part_left, single_data, silence_part_right])
+      else:
+        single_data = np.concatenate([single_data, np.zeros(L - len(single_data))])
 
     freqs, time, spec = signal.spectrogram(single_data,
                                             fs=L,
@@ -107,10 +122,11 @@ def process_wav_file(data, window_size=20, step_size=10, eps=1e-10):
   return freqs, time, spectrogram
 
 
-x_train, x_test, y_train, y_test = load_data(DATA_DIR)
+x_train, x_test, y_train, y_test, silence_files = load_data(DATA_DIR)
+silence_data = np.concatenate([read_wav_file(x) for x in silence_files])
 x_train = [read_wav_file(x) for x in x_train]
 x_test = [read_wav_file(x) for x in x_test]
-freqs, times, x_train = process_wav_file(x_train)
+freqs, times, x_train = process_wav_file(x_train, silence_data)
 freqs, times, x_test = process_wav_file(x_test)
 
 print(x_train.shape[1:])
@@ -137,7 +153,7 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 epochs = 150
-batch_size = 32
+batch_size = 64
 file_name = str(epochs) + '_' + str(batch_size)
 cbks = [
     EarlyStopping(monitor='val_loss',
@@ -151,11 +167,6 @@ cbks = [
                       verbose=1,
                       epsilon=0.01,
                       mode='min'),
-     #ModelCheckpoint(monitor='val_loss',
-     #                filepath='weights/starter.hdf5',
-     #                save_best_only=True,
-     #                save_weights_only=True,
-     #                mode='min'),
     TensorBoard(log_dir='logs/' + file_name)
 ]
 print(x_train.shape)
